@@ -19,8 +19,7 @@ EPOCHS = 500
 LEARNING_RATE = 0.001
 NUM_SAMPLES = 1000
 NUM_CLASSES = 2
-# ACTIVATION = "relu"
-ACTIVATION = "tanh"
+ACTIVATION = "sigmoid"
 # HIDDEN_LAYERS = (100,)
 # HIDDEN_LAYERS = (100, 50)
 HIDDEN_LAYERS = (100, 50, 25)
@@ -82,7 +81,7 @@ if __name__ == "__main__":
     # random_state for reproducibility. Same sample data will be generated each time.
 
     # Step 5: Visualize the generated data
-    # visualize_data(X, y, timestamp)
+    visualize_data(X, y, timestamp)
 
     # Step 2: Split data (and shuffle)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=40, shuffle=True)

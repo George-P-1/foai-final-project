@@ -1,8 +1,10 @@
 import numpy as np
 from joblib import load
 
-# Load the trained model
+# Path to the trained model
 model_path = "model-.joblib"
+
+# Load the trained model
 model = load(model_path)
 print(f"Model loaded from {model_path}")
 
