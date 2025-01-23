@@ -5,6 +5,18 @@ from sklearn.datasets import make_classification
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPClassifier
 import wandb
+from datetime import datetime
+
+# CONFIGS
+EPOCHS = 500
+LEARNING_RATE = 0.001
+
+CONFIG = dict(epochs=EPOCHS, learning_rate=LEARNING_RATE, hidden_layers=(100,))
+
+
+# Get the timestamp for the current run
+def get_timestamp():
+    return datetime.now().strftime("%Y-%m-%d_%H-%M-%S")  # Format: YYYY-MM-DD_HH-MM-SS
 
 # Step 1: Sample Data Generation
 def generate_data():
@@ -19,17 +31,15 @@ def split_data(X, y):
 
 # Step 3: Neural Network Model Construction
 def build_and_train_model(X_train, y_train, hidden_layer_sizes=(100,)):
-    model = MLPClassifier(hidden_layer_sizes=hidden_layer_sizes, max_iter=500, random_state=42)
+    model = MLPClassifier(hidden_layer_sizes=hidden_layer_sizes, max_iter=EPOCHS, random_state=42)
+    wandb.watch(model)  # Watch the model for logging gradients and parameters
     model.fit(X_train, y_train)
     return model
 
 # Step 4: WandB Integration
 def setup_wandb():
-    wandb.init(project="classification_project", config={
-        "learning_rate": 0.001,
-        "epochs": 500,
-        "hidden_layers": (100,)
-    })
+    timestamp = get_timestamp()
+    wandb.init(project="foai-classification-project", config=CONFIG, name=f"run_{timestamp}")
 
 # Step 5: Data Visualization
 def visualize_data(X, y):
@@ -37,14 +47,23 @@ def visualize_data(X, y):
     plt.scatter(X[:, 0], X[:, 1], c=y, cmap="viridis", edgecolor="k")
     plt.title("Classification Data")
     plt.show()
+    # plt.close() # Close the plot to avoid overlapping plots
 
 # Step 6: User Input and Output Functionality
 def predict_user_input(model, user_data):
-    prediction = model.predict([user_data])
-    return prediction
+    try:
+        prediction = model.predict([user_data])
+        return prediction
+    except Exception as e:
+        print(f"Error during prediction: {e}")
+        return None
 
 # Skeleton Workflow
 if __name__ == "__main__":
+    
+    # Step 4: Setup WandB (currently not logging details, placeholder for later)
+    setup_wandb()
+    
     # Step 1: Generate data
     X, y = generate_data()
 
@@ -57,8 +76,6 @@ if __name__ == "__main__":
     # Step 3: Build and train the model
     model = build_and_train_model(X_train, y_train, hidden_layer_sizes=(100,))
 
-    # Step 4: Setup WandB (currently not logging details, placeholder for later)
-    setup_wandb()
 
     # Step 6: User prediction (example)
     user_data = X_test[0]  # Example input
@@ -68,3 +85,7 @@ if __name__ == "__main__":
     # Evaluate the model
     accuracy = model.score(X_test, y_test)
     print(f"Model Accuracy: {accuracy:.2f}")
+
+    # Log the accuracy to WandB
+    wandb.summary['test_accuracy'] = accuracy
+    wandb.finish() # Finish the run
