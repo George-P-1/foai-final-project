@@ -12,6 +12,8 @@ import seaborn as sns
 import pandas as pd
 from math import ceil
 
+from joblib import dump
+
 # CONFIGS
 EPOCHS = 500
 LEARNING_RATE = 0.001
@@ -25,6 +27,15 @@ CONFIG = dict(epochs=EPOCHS, learning_rate=LEARNING_RATE, hidden_layers=HIDDEN_L
 # Get the timestamp for the current run
 def get_timestamp():
     return datetime.now().strftime("%Y-%m-%d_%H-%M-%S")  # Format: YYYY-MM-DD_HH-MM-SS
+
+# Step 5: Visualize generated data
+def visualize_data(X, y, timestamp):
+    # Create a DataFrame with X and y
+    df = pd.DataFrame(X, columns=[f"Feature {i+1}" for i in range(X.shape[1])])
+    df["Class"] = y
+    # Pair plot - pairwise scatter plots for all combinations of features
+    sns.pairplot(df, hue="Class", diag_kind="kde")
+    plt.savefig(f"pairplot-{timestamp}.png")
 
 # Step 6: User Input Functionality
 def predict_user_input(model, inp_min, inp_max):
@@ -65,13 +76,8 @@ if __name__ == "__main__":
                                n_redundant=2, n_classes=NUM_CLASSES, random_state=40)
     # random_state for reproducibility. Same sample data will be generated each time.
 
-    # Visualize the generated data
-    # Create a DataFrame with X and y
-    df = pd.DataFrame(X, columns=[f"Feature {i+1}" for i in range(X.shape[1])])
-    df["Class"] = y
-    # Pair plot - pairwise scatter plots for all combinations of features
-    sns.pairplot(df, hue="Class", diag_kind="kde")
-    plt.savefig(f"pairplot-{timestamp}.png")
+    # Step 5: Visualize the generated data
+    visualize_data(X, y, timestamp)
 
     # Step 2: Split data (and shuffle)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=40, shuffle=True)
@@ -94,6 +100,11 @@ if __name__ == "__main__":
     wandb.sklearn.plot_confusion_matrix(y_test, model.predict(X_test), labels=[0, 1])           # Confusion matrix
     wandb.summary['test_accuracy'] = accuracy
     wandb.finish() # Finish the run
+
+    # Step 7: Save the model
+    # Save the model to a file
+    dump(model, f"mlp_classifier-{timestamp}.joblib")
+    print(f"Model saved as mlp_classifier-{timestamp}.joblib")
 
     # Step 6: User prediction (example)
     print(f"Feature ranges:\nMin: {X.min(axis=0)}\nMax: {X.max(axis=0)}") # To see the range of values that each of the features can take
