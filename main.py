@@ -19,9 +19,14 @@ EPOCHS = 500
 LEARNING_RATE = 0.001
 NUM_SAMPLES = 1000
 NUM_CLASSES = 2
-HIDDEN_LAYERS = (100,)
+# ACTIVATION = "relu"
+ACTIVATION = "tanh"
+# HIDDEN_LAYERS = (100,)
+# HIDDEN_LAYERS = (100, 50)
+HIDDEN_LAYERS = (100, 50, 25)
+# HIDDEN_LAYERS = (100, 100)
 
-CONFIG = dict(epochs=EPOCHS, learning_rate=LEARNING_RATE, hidden_layers=HIDDEN_LAYERS, num_samples=NUM_SAMPLES, num_classes=NUM_CLASSES)
+CONFIG = dict(epochs=EPOCHS, learning_rate=LEARNING_RATE, activation=ACTIVATION, hidden_layers=HIDDEN_LAYERS, num_samples=NUM_SAMPLES, num_classes=NUM_CLASSES)
 
 
 # Get the timestamp for the current run
@@ -77,13 +82,13 @@ if __name__ == "__main__":
     # random_state for reproducibility. Same sample data will be generated each time.
 
     # Step 5: Visualize the generated data
-    visualize_data(X, y, timestamp)
+    # visualize_data(X, y, timestamp)
 
     # Step 2: Split data (and shuffle)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=40, shuffle=True)
 
     # Step 3: Build and train the model
-    model = MLPClassifier(hidden_layer_sizes=HIDDEN_LAYERS, max_iter=EPOCHS, random_state=40, verbose=True)
+    model = MLPClassifier(hidden_layer_sizes=HIDDEN_LAYERS, max_iter=EPOCHS, random_state=40, verbose=True, activation=ACTIVATION, learning_rate_init=LEARNING_RATE)
     model.fit(X_train, y_train)
     # Log the entire loss curve to WandB
     for epoch, loss in enumerate(model.loss_curve_):
@@ -107,8 +112,9 @@ if __name__ == "__main__":
     print(f"Model saved as mlp_classifier-{timestamp}.joblib")
 
     # Step 6: User prediction (example)
-    print(f"Feature ranges:\nMin: {X.min(axis=0)}\nMax: {X.max(axis=0)}") # To see the range of values that each of the features can take
-    inp_min = np.min(X)
-    inp_max = np.max(X)
-    prediction = predict_user_input(model, ceil(inp_min), ceil(inp_max))
-    print("Predicted Class for user input:", prediction)
+    if False:
+        print(f"Feature ranges:\nMin: {X.min(axis=0)}\nMax: {X.max(axis=0)}") # To see the range of values that each of the features can take
+        inp_min = np.min(X)
+        inp_max = np.max(X)
+        prediction = predict_user_input(model, ceil(inp_min), ceil(inp_max))
+        print("Predicted Class for user input:", prediction)
