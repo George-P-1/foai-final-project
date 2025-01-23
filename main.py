@@ -55,14 +55,13 @@ if __name__ == "__main__":
                                n_redundant=2, n_classes=NUM_CLASSES, random_state=40)
     # random_state for reproducibility.
 
-    # # Visualize the generated data
-    visualize_data(X, y)
+    # Visualize the generated data
     # Create a DataFrame with X and y
     df = pd.DataFrame(X, columns=[f"Feature {i+1}" for i in range(X.shape[1])])
     df["Class"] = y
-    # Pair plot
+    # Pair plot - pairwise scatter plots for all combinations of features
     sns.pairplot(df, hue="Class", diag_kind="kde")
-    plt.show()
+    plt.savefig(f"pairplot-{timestamp}.png")
 
     # Step 2: Split data (and shuffle)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=40, shuffle=True)
@@ -78,7 +77,11 @@ if __name__ == "__main__":
     accuracy = model.score(X_test, y_test)
     print(f"Model Accuracy: {accuracy:.2f}")
 
-    # Log the accuracy to WandB
+    # Log to WandB
+    # Log evaluation metrics to WandB
+    wandb.sklearn.plot_roc(y_test, model.predict_proba(X_test), labels=[0, 1])                  # Receiver Operating Characteristic (ROC) curve
+    wandb.sklearn.plot_precision_recall(y_test, model.predict_proba(X_test), labels=[0, 1])     # Precision-Recall curve
+    wandb.sklearn.plot_confusion_matrix(y_test, model.predict(X_test), labels=[0, 1])           # Confusion matrix
     wandb.summary['test_accuracy'] = accuracy
     wandb.finish() # Finish the run
 
