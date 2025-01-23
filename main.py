@@ -10,6 +10,7 @@ from datetime import datetime
 from matplotlib.colors import ListedColormap
 import seaborn as sns
 import pandas as pd
+from math import ceil
 
 # CONFIGS
 EPOCHS = 500
@@ -25,23 +26,32 @@ CONFIG = dict(epochs=EPOCHS, learning_rate=LEARNING_RATE, hidden_layers=HIDDEN_L
 def get_timestamp():
     return datetime.now().strftime("%Y-%m-%d_%H-%M-%S")  # Format: YYYY-MM-DD_HH-MM-SS
 
-# Step 5: Data Visualization
-def visualize_data(X, y):
-    plt.figure(figsize=(8, 6))
-    plt.scatter(X[:, 0], X[:, 1], c=y, cmap="viridis", edgecolor="k") # !! Only plotting the first two features
-    plt.title("Classification Data")
-    # plt.show()
-    wandb.log({"generated_samples_plot": plt}) # Save the plot to WandB
-
-
-# Step 6: User Input and Output Functionality
-def predict_user_input(model, user_data):
+# Step 6: User Input Functionality
+def predict_user_input(model, inp_min, inp_max):
     try:
-        prediction = model.predict([user_data])
+        # Prompt the user for input
+        print("\nEnter feature values separated by spaces (10 features expected):")
+        user_input = input().strip()
+
+        # Convert input to a numpy array
+        user_data = np.array([float(x) for x in user_input.split()]).reshape(1, -1)
+        
+        # Validate the range of user inputs
+        if np.any(user_data < inp_min) or np.any(user_data > inp_max):
+            print(f"Warning: Some values are outside the expected range ({inp_min} to {inp_max}).")
+
+        # Ensure the correct number of features
+        if user_data.shape[1] != 10:
+            print("Error: You must enter exactly 10 features.")
+            return
+
+        # Make a prediction
+        prediction = model.predict(user_data)
         return prediction
+
     except Exception as e:
         print(f"Error during prediction: {e}")
-        return None
+
 
 # Skeleton Workflow
 if __name__ == "__main__":
@@ -53,7 +63,7 @@ if __name__ == "__main__":
     # Step 1: Generate sample data
     X, y = make_classification(n_samples=NUM_SAMPLES, n_features=10, n_informative=8, 
                                n_redundant=2, n_classes=NUM_CLASSES, random_state=40)
-    # random_state for reproducibility.
+    # random_state for reproducibility. Same sample data will be generated each time.
 
     # Visualize the generated data
     # Create a DataFrame with X and y
@@ -85,7 +95,9 @@ if __name__ == "__main__":
     wandb.summary['test_accuracy'] = accuracy
     wandb.finish() # Finish the run
 
-    # # Step 6: User prediction (example)
-    # user_data = X_test[0]  # Example input
-    # prediction = predict_user_input(model, user_data)
-    # print("Prediction for user input:", prediction)
+    # Step 6: User prediction (example)
+    print(f"Feature ranges:\nMin: {X.min(axis=0)}\nMax: {X.max(axis=0)}") # To see the range of values that each of the features can take
+    inp_min = np.min(X)
+    inp_max = np.max(X)
+    prediction = predict_user_input(model, ceil(inp_min), ceil(inp_max))
+    print("Predicted Class for user input:", prediction)
